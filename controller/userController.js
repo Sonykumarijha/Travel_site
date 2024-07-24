@@ -1,0 +1,137 @@
+import userModel from "../model/users.js"
+import bcrypt from "bcrypt"
+import fs from 'fs';
+import path from 'path';
+import jwt from 'jsonwebtoken';
+
+export const createUser = async (req, res) => {
+    try {
+        const { name, email, phone, password } = req.body
+        const image = req.file ? req.file.path : null;
+
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({ message: 'invalid payload' })
+        }
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+
+
+        let hashedPassword = await bcrypt.hash(password, 10)
+
+        let user = await userModel.create({ name, email, phone, password: hashedPassword, image })
+        return res.status(200).json({ message: 'user created successfully', user: user })
+    } catch (error) {
+        return res.status(400).json({ message: 'user not created', error: error })
+    }
+}
+
+export const getUser = async (req, res) => {
+    try {
+        const userId = req.params.id
+        let user = await userModel.findById(userId)
+        return res.status(200).json({ user: user })
+    } catch (error) {
+        return res.status(400).json({ message: "error" })
+    }
+
+}
+
+export const updateUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        const { name, phone, password } = req.body;
+        const newImage = req.file ? req.file.path : null;
+
+        const data = {
+        name:name,
+        phone:phone,
+        password:password,
+        image:newImage
+    }
+
+        if (newImage && user.image) {
+            const oldImagePath = path.join('uploads/', '..', user.image);
+            fs.unlink(oldImagePath, (err) => {
+                if (err) {
+                    console.error('Failed to delete old image:', err);
+                }
+            });
+        }
+
+
+        const updatedUser = await userModel.findByIdAndUpdate(userId, data, { new: true });
+
+        return res.status(200).json({ message: "Updated successfully", updatedUser: updatedUser });
+    } catch (error) {
+        console.log(error,'error**');
+        return res.status(400).json({ message: 'User not updated', error: error });
+    }
+};
+
+
+export const deleteUser = async (req,res) => {
+    try {
+        const userId = req.params.id
+
+    const user = await userModel.findById(userId)
+
+    if (!user) {
+        return res.status(400).json({message: "user not found"})
+    }
+
+    await userModel.findByIdAndDelete(userId)
+    return res.status(200).json({message: "Deleted successfully"})
+    } catch (error) {
+        return res.status(400).json({ message: "****error****" })
+
+    }
+    
+}
+
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
+        const user = await userModel.findOne({ email: email });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' } 
+        );
+
+        const updateUser = await userModel.findByIdAndUpdate(user._id,{$set: {access_token:token}},{new:true})
+
+        return res.status(200).json({ message: "Login Successfully", token: token });
+    } catch (error) {
+        console.error("Login error:", error);
+        return res.status(500).json({ message: "Something went wrong", error: error.message });
+    }
+};
