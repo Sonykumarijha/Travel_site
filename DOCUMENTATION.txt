@@ -1,0 +1,106 @@
+---> To start the server : npm run dev
+
+There are two models
+
+1.> TOUR
+
+-> to create tour: localhost:3000/tours  POST
+
+payload:  {
+  "title": "Amazing Italy Tour",
+  "description": "Experience the best of Europe in 10 days",
+  "destination": "Italy",
+  "price": 1200,
+  "startDate": "2024-08-01",
+  "endDate": "2024-08-10"
+}
+
+-> to get tour by destination: localhost:3000/tours/bydestination?destination=Italy  GET
+
+------------------------------------------------------------------------------------------------------------------------------
+
+2.> HOTELS
+
+-> to create hotel: localhost:3000/hotels  POST
+
+payload:  {
+  "name": "Heritage Hotel",
+  "located": {
+    "country": "India",
+    "state": "Punjab",
+    "city": "Jalandhar",
+    "address": "near St.Soldier Institute Amritsar Road",
+    "latitude": 31.337720, 
+    "longitude": 75.558960
+  },
+  "review": {
+    "username": "sony",
+    "text": "royal hotel with multiple facilities",
+    "rating": 4.5
+  },
+  "price": 800,
+  "image": "add image address",
+  "meta": "free wifi and parking area"
+}
+
+-> to get allHotels : localhost:3000/hotels/all  GET
+
+----------------------------------------------------------------------------------------------------------------
+
+3.> VEHICLES(FLIGHTS/TRAINS)
+
+-> to create vehicle: localhost:3000/vehicles  POST
+
+payload: {
+  "role": "TRAIN",    // "FLIGHT"
+  "name": "Shtavdi express 2",   // "AU Airlines"
+  "origin": "DELHI",
+  "destination": "USA",
+  "departureTime": "2024-07-16T09:00:00.000Z",
+  "arrivalTime": "2024-07-17T13:06:00.000Z",
+  "price": 8000,
+  "meta": {
+    "route": "Delhi"
+  }
+}
+
+
+-> to get flights by destination: localhost:3000/vehicles/flightByDestination?destination=AU  GET
+
+-> to get trains by destination: localhost:3000/vehicles/trainByDestination?destination=AU  GET
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+
+
+3.> CARS
+
+-> to create car: localhost:3000/cars  POST
+
+payload: {
+  "name": "Toyota 987",
+  "seats": 4,
+  "type": "petrol",  // "diesel"
+  "tankCapacity": 47,
+  "price": 200,
+  "review": {
+    "username": "sony",
+    "text": "abcd",
+    "rating": 5
+  },
+  "meta": {
+    "automatic": "true"
+  }
+}
+
+
+-> to get cars by top rating: localhost:3000/cars/byrating  GET
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+
+
