@@ -2,11 +2,11 @@ import activityModel from "../model/activities.js"
 
 export const createActivity = async (req, res) => {
     try {
-        const { name, location, price} = req.body
+        const { name, location, price, review,activity_type} = req.body
         if (!name || !location || !price) {
             return res.status(400).json({ message: 'invalid payload' })
         }
-        let activity = await activityModel.create({name, location, price })
+        let activity = await activityModel.create({name, location, price, review, activity_type })
         return res.status(200).json({ message: 'activity created successfully', activity: activity })
     } catch (error) {
         return res.status(400).json({ message: 'activity not created', error: error })
@@ -20,7 +20,7 @@ export const getActivityByLocation = async (req, res) => {
             return res.status(400).json({ message: "location is required" });
         }
         
-        const activities = await activityModel.find({ location: { $regex: `^${location}$`, $options: 'i' } });
+        const activities = await activityModel.find({ location: { $regex: `^${location}$`, $options: 'i' } }).sort({ "review.rating": -1 }).limit(5);
         
         return res.status(200).json({ activities });
     } catch (error) {
@@ -49,7 +49,7 @@ export const updateActivity = async (req, res) => {
 export const deleteActivity = async (req, res) => {
     try {
         let activityId = req.params.id
-        await tourModel.findByIdAndDelete(activityId)
+        await activityModel.findByIdAndDelete(activityId)
         return res.status(200).json({ message: "deleted successfully" })
 
     } catch (error) {
