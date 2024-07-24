@@ -1,11 +1,14 @@
 import hotelModel from "../model/hotels.js";
 import fetch from 'node-fetch';
-
+import fs from 'fs';
+import path from 'path';
+import cloudinary from "../helpers/cloudinary.js";
 
 export const createHotel = async (req, res) => {
     try {
-        const { name, located, review, price, meta, image } = req.body;
+        const { name, located, review, price, meta } = req.body;
         const { country, state, city, address, latitude, longitude } = located;
+        const image = req.file ? req.file.path : null
 
         if (!name || !country || !state || !city || !latitude || !longitude || !review || !price || !meta || !image) {
             return res.status(400).json({ message: 'Invalid payload' });
@@ -28,12 +31,17 @@ export const createHotel = async (req, res) => {
             image 
         });
 
-        return res.status(200).json({ message: 'Hotel created successfully', hotel });
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(image);
+
+        return res.status(200).json({ message: 'Hotel created successfully', hotel:hotel,imageUrl: result.secure_url });
     } catch (error) {
         console.log(error);
         return res.status(400).json({ message: 'Hotel not created', error });
     }
-};
+}; 
+
+
 
 // *******Haversine formula
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -72,7 +80,6 @@ const getCityCoordinates = async (city, country) => {
     }
 };
 
-//-------------------------***** TASK 2 : GET TOP HOTELS----------------------------------------------
 
 export const getHotelsByRating = async (req, res) => {
     try {
@@ -112,22 +119,78 @@ export const getHotel = async (req,res) => {
 }
 
 
+export const updateHotel = async (req, res) => {
+    try {
+        const hotelId = req.params.id;
 
-export const updateHotel = async (req,res) => {
+        const hotel = await hotelModel.findById(hotelId);
 
-    try{
-        let hotel_Id = req.params.id
-        let updated_hotel = await hotelModel.findByIdAndUpdate(hotel_Id,req.body,{
-            new:true
-        })
+        if (!hotel) {
+            return res.status(400).json({ message: "Hotel not found" });
+        }
 
-        return res.status(200).json({message: "updated successfully", updatedHotel: updated_hotel})
+        const { name, located,review,price,meta } = req.body;
+        const { country, state, city, address, latitude, longitude } = located;
+        const newImage = req.file ? req.file.path : hotel.image;
 
-    }catch(error){
-        console.log(error);
-        return res.status(400).json({message: "***************error***************"})
+        const cityCoordinates = await getCityCoordinates(city, country);
+        if (!cityCoordinates) {
+            return res.status(400).json({ message: 'Unable to geocode city' });
+        }
+
+        const distance = calculateDistance(cityCoordinates.lat, cityCoordinates.lng, latitude, longitude);
+
+        const data = {
+        name,
+        located:{ country, state, city, address, latitude, longitude },
+        distance: `${distance.toFixed(2)} km from ${city}`,
+        review,
+        price,
+        meta,
+        image:newImage
     }
-}
+
+        if (newImage && hotel.image) {
+            const oldImagePath = path.join('uploads/', '..', hotel.image);
+            fs.unlink(oldImagePath, (err) => {
+                if (err) {
+                    console.error('Failed to delete old image:', err);
+                }
+            });
+        }
+
+
+        const updatedHotel = await hotelModel.findByIdAndUpdate(hotelId, data, { new: true });
+
+        return res.status(200).json({ message: "Updated successfully", updatedHotel: updatedHotel });
+    } catch (error) {
+        console.log(error,'error**');
+        return res.status(400).json({ message: 'Hotel not updated', error: error });
+    }
+};
+
+
+
+// export const updateHotel = async (req,res) => {
+//     try{
+//         let hotel_Id = req.params.id
+//         let hotel = await hotelModel.findById(hotel_Id)
+//         if (!hotel) {
+//             return res.status(400).json({message:"no hotel found"})
+//         }
+
+
+//         let updated_hotel = await hotelModel.findByIdAndUpdate(hotel_Id,req.body,{
+//             new:true
+//         })
+
+//         return res.status(200).json({message: "updated successfully", updatedHotel: updated_hotel})
+
+//     }catch(error){
+//         console.log(error);
+//         return res.status(400).json({message: "***************error***************"})
+//     }
+// }
 
 export const deleteHotel = async (req,res) => {
     try {

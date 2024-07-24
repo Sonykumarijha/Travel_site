@@ -3,8 +3,11 @@ import bcrypt from "bcrypt"
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
+import cloudinary from "../helpers/cloudinary.js";
+import { getRandomSixDigit } from "../helpers/randomValues.js";
 
 export const createUser = async (req, res) => {
+
     try {
         const { name, email, phone, password } = req.body
         const image = req.file ? req.file.path : null;
@@ -25,7 +28,11 @@ export const createUser = async (req, res) => {
         let hashedPassword = await bcrypt.hash(password, 10)
 
         let user = await userModel.create({ name, email, phone, password: hashedPassword, image })
-        return res.status(200).json({ message: 'user created successfully', user: user })
+
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(image);
+
+        return res.status(200).json({ message: 'user created successfully', user: user, imageUrl: result.secure_url })
     } catch (error) {
         return res.status(400).json({ message: 'user not created', error: error })
     }
@@ -56,11 +63,11 @@ export const updateUser = async (req, res) => {
         const newImage = req.file ? req.file.path : null;
 
         const data = {
-        name:name,
-        phone:phone,
-        password:password,
-        image:newImage
-    }
+            name: name,
+            phone: phone,
+            password: password,
+            image: newImage
+        }
 
         if (newImage && user.image) {
             const oldImagePath = path.join('uploads/', '..', user.image);
@@ -76,29 +83,29 @@ export const updateUser = async (req, res) => {
 
         return res.status(200).json({ message: "Updated successfully", updatedUser: updatedUser });
     } catch (error) {
-        console.log(error,'error**');
+        console.log(error, 'error**');
         return res.status(400).json({ message: 'User not updated', error: error });
     }
 };
 
 
-export const deleteUser = async (req,res) => {
+export const deleteUser = async (req, res) => {
     try {
         const userId = req.params.id
 
-    const user = await userModel.findById(userId)
+        const user = await userModel.findById(userId)
 
-    if (!user) {
-        return res.status(400).json({message: "user not found"})
-    }
+        if (!user) {
+            return res.status(400).json({ message: "user not found" })
+        }
 
-    await userModel.findByIdAndDelete(userId)
-    return res.status(200).json({message: "Deleted successfully"})
+        await userModel.findByIdAndDelete(userId)
+        return res.status(200).json({ message: "Deleted successfully" })
     } catch (error) {
         return res.status(400).json({ message: "****error****" })
 
     }
-    
+
 }
 
 export const login = async (req, res) => {
@@ -124,10 +131,10 @@ export const login = async (req, res) => {
         const token = jwt.sign(
             { userId: user._id, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' } 
+            { expiresIn: '1h' }
         );
 
-        const updateUser = await userModel.findByIdAndUpdate(user._id,{$set: {access_token:token}},{new:true})
+        const updateUser = await userModel.findByIdAndUpdate(user._id, { $set: { access_token: token } }, { new: true })
 
         return res.status(200).json({ message: "Login Successfully", token: token });
     } catch (error) {
@@ -135,3 +142,31 @@ export const login = async (req, res) => {
         return res.status(500).json({ message: "Something went wrong", error: error.message });
     }
 };
+
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { email } = req.body
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' })
+        }
+
+        const user = await userModel.findOne({ email })
+        if (!user) {
+            return res.status(400).json({ message: "No user exist with this email" })
+        }
+
+        let randomSixDigit = getRandomSixDigit();
+
+
+        const updatedUser = await userModel.findByIdAndUpdate(user._id, { otp: randomSixDigit }, { new: true })
+
+
+        return res.status(200).json({ message: "otp sent successfully", otp: updatedUser.otp })
+    
+    } catch (error) {
+        return res.status(400).json({ message: "something went wrong" })
+    }
+}
+

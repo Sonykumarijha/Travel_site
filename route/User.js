@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import fs from 'fs';
 import path from 'path';
-import { createUser, deleteUser, getUser, login, updateUser } from "../controller/userController.js";
+import { createUser, deleteUser, getUser, login, resetPassword, updateUser } from "../controller/userController.js";
 
 const router = express.Router()
 
@@ -24,6 +24,7 @@ router.get("/:id", getUser)
 router.put("/:id",upload.single('image'),updateUser)
 router.delete("/:id", deleteUser)
 router.post("/login",login)
+router.post("/resetpassword",resetPassword)
 
 
 

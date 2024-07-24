@@ -25,6 +25,11 @@ const userSchema = new Schema(
         },
         access_token: {
             type: String
+        },
+        otp: {
+            type: Number,
+            required: false
+
         }
               
     },
