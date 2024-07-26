@@ -4,6 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
 import cloudinary from "../helpers/cloudinary.js";
+import nodemailer from 'nodemailer';
+
 import { getRandomSixDigit } from "../helpers/randomValues.js";
 
 export const createUser = async (req, res) => {
@@ -29,10 +31,12 @@ export const createUser = async (req, res) => {
 
         let user = await userModel.create({ name, email, phone, password: hashedPassword, image })
 
+
         // Upload image to Cloudinary
         const result = await cloudinary.uploader.upload(image);
 
         return res.status(200).json({ message: 'user created successfully', user: user, imageUrl: result.secure_url })
+
     } catch (error) {
         return res.status(400).json({ message: 'user not created', error: error })
     }
@@ -83,7 +87,6 @@ export const updateUser = async (req, res) => {
 
         return res.status(200).json({ message: "Updated successfully", updatedUser: updatedUser });
     } catch (error) {
-        console.log(error, 'error**');
         return res.status(400).json({ message: 'User not updated', error: error });
     }
 };
@@ -143,30 +146,110 @@ export const login = async (req, res) => {
     }
 };
 
+ export const resetPassword = async (req, res) => {
+        try {
+            const { email } = req.body
 
-export const resetPassword = async (req, res) => {
+            if (!email) {
+                return res.status(400).json({ message: 'Email is required' })
+            }
+
+            const user = await userModel.findOne({ email })
+            if (!user) {
+                return res.status(400).json({ message: "No user exist with this email" })
+            }
+
+            let randomSixDigit = getRandomSixDigit();
+
+            const updatedUser = await userModel.findByIdAndUpdate(
+                user._id,
+                { otp: randomSixDigit },
+                { new: true, timestamps: true } 
+            );
+
+
+
+            //_________________________________________________________ SEND EMAIL _________________________________________________________
+
+            //let testAccount = await nodemailer.createTestAccount()
+            
+            const transporter = nodemailer.createTransport({
+                host: 'smtp.ethereal.email',
+                port: 587,
+                auth: {
+                    user: 'trudie89@ethereal.email',
+                    pass: 'JPBUyN8ept8yUYM7zM'
+                }
+            });
+
+            const info = await transporter.sendMail({
+                from: 'trudie89@ethereal.email', 
+                to: "sony@mailinator.com",
+                subject: 'Your OTP Code',
+                text: `Your OTP code is ${updatedUser.otp}`, 
+                html: "<b>Hello world****************?</b>", 
+              });
+
+              console.log(info.messageId,'__message sent on this id');
+
+            //____________________________________________________________________________________________________________________
+
+
+
+            return res.status(200).json({ message: "otp sent successfully", otp: updatedUser.otp, info })
+        
+        } catch (error) {
+            return res.status(400).json({ message: "something went wrong" })
+        }
+    }
+
+
+export const verifyOtp = async (req,res) => {
     try {
-        const { email } = req.body
-
-        if (!email) {
-            return res.status(400).json({ message: 'Email is required' })
+        let {email,otp} = req.body
+        if (!otp || !email) {
+            return res.status(400).json({message: "payloadss required"})
         }
+        let user = await userModel.findOne({email})
 
-        const user = await userModel.findOne({ email })
         if (!user) {
-            return res.status(400).json({ message: "No user exist with this email" })
+            return res.status(400).json({message: " no user found"})
         }
 
-        let randomSixDigit = getRandomSixDigit();
+        const otpExpiryTime = 3 * 60 * 1000; // 3 minutes in milliseconds
+        const currentTime = new Date();
+        const otpGeneratedAt = new Date(user.updatedAt);
+        const timeDifference = currentTime - otpGeneratedAt;
 
+        if (timeDifference > otpExpiryTime) {
+            return res.status(400).json({ message: "OTP has expired" });
+        }
 
-        const updatedUser = await userModel.findByIdAndUpdate(user._id, { otp: randomSixDigit }, { new: true })
+        if (user.otp !== parseInt(otp)) {
+            return res.status(400).json({ message: "Invalid OTP" });
+        }
 
-
-        return res.status(200).json({ message: "otp sent successfully", otp: updatedUser.otp })
-    
+        return res.status(400).json({message: "otp verify successfully", user})
     } catch (error) {
-        return res.status(400).json({ message: "something went wrong" })
+        return res.status(400).json({message: "something went wrong"})
     }
 }
+
+export const resetNewPassword = async (req,res) => {
+    try {
+        const {email, new_password} = req.body
+        let user = await userModel.findOne({email})
+        if (!user) {
+            return res.status(400).json({message: "user not found"})
+        }
+        let hashedPassword = await bcrypt.hash(new_password, 10)
+        let updatedUser = await userModel.findByIdAndUpdate(user._id, {password: hashedPassword},{new:true})
+        return res.status(200).json({message: "New password reset successfully"})
+    } catch (error) {
+        return res.status(400).json({mesage: "something went wrong"})
+    }
+}
+
+
+
 

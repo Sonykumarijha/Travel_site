@@ -83,7 +83,12 @@ const getCityCoordinates = async (city, country) => {
 
 export const getHotelsByRating = async (req, res) => {
     try {
-        let hotels = await hotelModel.find().sort({ "review.rating": -1 }).limit(10);
+        const { country } = req.query; // Extract country from query parameters
+
+        if (!country) {
+            return res.status(400).json({ message: "Country parameter is required" });
+        }
+        let hotels = await hotelModel.find({ "located.country": { $regex: `^${country}$`, $options: 'i' } }).sort({ "review.rating": -1 }).limit(10);
         return res.status(200).json({ hotels: hotels });
     } catch (error) {
         console.log(error);
@@ -91,9 +96,16 @@ export const getHotelsByRating = async (req, res) => {
     }
 };
 
+
+
 export const getHotelsByPrice = async (req, res) => {
     try {
-        let hotels = await hotelModel.find().sort({ "price": 1 }).limit(10);
+        const { country } = req.query; // Extract country from query parameters
+
+        if (!country) {
+            return res.status(400).json({ message: "Country parameter is required" });
+        }
+        let hotels = await hotelModel.find({ "located.country": { $regex: `^${country}$`, $options: 'i' } }).sort({ "price": 1 }).limit(10);
         return res.status(200).json({ hotels: hotels });
     } catch (error) {
         console.log(error);
