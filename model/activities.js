@@ -29,7 +29,7 @@ const activitySchema = new Schema(
             type: String,
             required: true
         },
-        location:{
+        location: {
             type: String,
             required: true
         },
@@ -46,14 +46,22 @@ const activitySchema = new Schema(
             type: String,
             required: true,
         },
-                
+        description: {
+            type: String,
+            required: true,
+        },
+        meta: {
+            type: Object,
+            required: false,
+        },
+
     },
-    
+
     {
-        versionKey:false,
-        timestamps:true
+        versionKey: false,
+        timestamps: true
     }
 )
 
-const activityModel = mongoose.model("Activity",activitySchema)
+const activityModel = mongoose.model("Activity", activitySchema)
 export default activityModel

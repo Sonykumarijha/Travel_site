@@ -2,11 +2,11 @@ import activityModel from "../model/activities.js"
 
 export const createActivity = async (req, res) => {
     try {
-        const { name, location, price, review,activity_type} = req.body
+        const { name, location, price, review,activity_type,description,meta} = req.body
         if (!name || !location || !price) {
             return res.status(400).json({ message: 'invalid payload' })
         }
-        let activity = await activityModel.create({name, location, price, review, activity_type })
+        let activity = await activityModel.create({name, location, price, review, activity_type,description,meta })
         return res.status(200).json({ message: 'activity created successfully', activity: activity })
     } catch (error) {
         return res.status(400).json({ message: 'activity not created', error: error })
