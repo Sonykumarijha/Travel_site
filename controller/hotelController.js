@@ -3,6 +3,8 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 import cloudinary from "../helpers/cloudinary.js";
+import axios from 'axios';
+
 
 export const createHotel = async (req, res) => {
     try {
@@ -100,7 +102,7 @@ export const getHotelsByRating = async (req, res) => {
 
 export const getHotelsByPrice = async (req, res) => {
     try {
-        const { country } = req.query; // Extract country from query parameters
+        const { country } = req.query;
 
         if (!country) {
             return res.status(400).json({ message: "Country parameter is required" });
@@ -217,8 +219,127 @@ export const deleteHotel = async (req,res) => {
 
 
 
+//-------------------------------- by The Nominatim API from OpenStreetMap (working)    (VIATOR**) --------------------------------------------------------------------
+
+export const getAllHotels = async (req, res) => {
+    console.log('9999999999999999999999999999999999');
+    
+    const { city, checkin_date, checkout_date } = req.query;
+
+    if (!city ) {
+        return res.status(400).json({ error: 'City, check-in date, and check-out date are required' });
+    }
+
+    try {
+        // Perform a text search for hotels in the specified city
+        const hotelResponse = await axios.get('https://nominatim.openstreetmap.org/search', {
+            params: {
+                q: `hotels in ${city}, Himachal Pradesh`,
+                format: 'json',
+                addressdetails: 1
+            }
+        });
+
+        // Filter results to ensure the city is valid
+        const filteredHotels = hotelResponse.data.filter(hotel => {
+            return hotel.display_name.toLowerCase().includes(city.toLowerCase());
+        });
+
+        res.json({ city, hotels: filteredHotels });
+    } catch (error) {
+        console.error('Error fetching hotels:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'An error occurred while fetching hotels' });
+    }
+};
+
+
+
+
+//------------------------------------------------------------------------------------
+
+
+
+// export const getAllHotels = async (req, res) => {
+//     const { city, checkin_date, checkout_date } = req.query;
+//     console.log(city,'city*****',checkin_date,'checkin_date******',checkout_date,'checkout_date******');
+    
+
+//     // Validate input parameters
+//     if (!city || !checkin_date || !checkout_date) {
+//         return res.status(400).json({ error: 'City, check-in date, and check-out date are required' });
+//     }
+
+//     try {
+//         // Perform a text search for hotels in the specified city
+//         const hotelResponse = await axios.get('https://maps.googleapis.com/maps/api/place/textsearch/json', {
+//             params: {
+//                 query: `hotels in ${city}`,
+//                 key: "AIzaSyA0xTr1XKxofyzNolww3xesJ7Dy0h9am08"
+//             }
+//         });
+
+//         //********-----------You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/m    
+
+//         console.log(hotelResponse,'hotelResponse***');
+        
+
+//         // Extract and return hotel results
+//         const hotels = hotelResponse.data.results;
+//         console.log(hotels,'hotels******');
+        
+//         res.json(hotels);
+//     } catch (error) {
+//         // Log and return error information
+//         console.error('Error fetching hotels:', error.response ? error.response.data : error.message);
+//         res.status(500).json({ error: 'An error occurred while fetching hotels' });
+//     }
+// };
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+// export const HotelsBYCity = async (req, res) => {
+    
+//     const city = req.query.city;
+
+    
+  
+//     if (!city) {
+//       return res.status(400).json({ error: 'City parameter is required' });
+//     }
+  
+//     try {
+//       const response = await axios.get('https://amadeus-api.p.rapidapi.com/v2/shopping/hotel-search', {
+//         headers: {
+//           'X-RapidAPI-Host': 'amadeus-api.p.rapidapi.com',
+//           'X-RapidAPI-Key': "7af34ec21amshf5b77d344e10327p10d9ebjsn8f583dc46a16"
+//         },
+//         params: {
+//           cityCode: city, // Use the correct parameter for city code or name
+//           checkInDate: '2024-08-15',
+//           checkOutDate: '2024-08-16',
+//           rooms: '1',
+//           adults: '1',
+//           children: '0'
+//         }
+//       });
+
+      
+  
+//       res.json(response.data);
+//     } catch (error) {
+//       console.error('Error fetching hotels:', error);
+//       res.status(500).json({ error: 'Error fetching hotels' });
+//     }
+//   }

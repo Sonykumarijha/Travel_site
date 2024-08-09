@@ -6,6 +6,11 @@ const tourSchema = new Schema(
             type: String,
             required: true
         },
+        type: {
+            type: String,
+            enum: ['adventure',"festive", 'cultural', 'nature', 'wildlife', 'luxury', 'family', 'romantic','health', 'wellness'],
+            required: true
+        },
         description:{
             type: String,
             required: true
@@ -27,8 +32,7 @@ const tourSchema = new Schema(
         endDate:{
             type: Date,
             required: true
-
-            
+                        
         },
       
     },

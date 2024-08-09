@@ -15,7 +15,7 @@ const reviewSchema = new Schema(
             required: true,
             min: 1,
             max: 5
-        }
+        } 
     },
     {
         _id: false,
@@ -25,6 +25,10 @@ const reviewSchema = new Schema(
 
 const activitySchema = new Schema(
     {
+        title: {
+            type: String,
+            required: false
+        },
         name: {
             type: String,
             required: true

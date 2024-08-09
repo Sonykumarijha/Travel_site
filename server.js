@@ -14,6 +14,8 @@ import activityRouter from "./route/Activity.js"
 import packageRouter from "./route/Package.js"
 
 import userRouter from "./route/User.js"
+import contactRouter from "./route/Contact.js"
+
 
 
 const app = express()
@@ -36,6 +38,8 @@ app.use("/vehicles", vehicleRouter)
 app.use("/cars", carRouter)
 app.use("/activities", activityRouter)
 app.use("/packages", packageRouter)
+
+app.use("/contacts", contactRouter)
 
 
 app.use("/users", userRouter)

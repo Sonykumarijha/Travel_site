@@ -26,7 +26,6 @@ export const createUser = async (req, res) => {
             return res.status(400).json({ message: 'Email already exists' });
         }
 
-
         let hashedPassword = await bcrypt.hash(password, 10)
 
         let user = await userModel.create({ name, email, phone, password: hashedPassword, image })

@@ -16,7 +16,7 @@ const reviewSchema = new Schema(
             min: 1,
             max: 5
         }
-    },
+    }, 
     {
         _id: false,
         timestamps: true
@@ -28,6 +28,16 @@ const packageSchema = new Schema(
         title: {
             type: String,
             required: true
+        },
+        package_type: {
+            type: String,
+            enum: ['honeymoon', 'adventurous', 'religious', 'festive', 'historical', 'offsite'],
+            default: 'adventurous', // Set default value to 'adventure'
+            required: false
+        },
+        image: {
+            type: String,
+            required: false
         },
         description: {
             type: String,

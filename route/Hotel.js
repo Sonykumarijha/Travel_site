@@ -1,7 +1,7 @@
 import express from "express"
 import multer from "multer";
 
-import { createHotel,  deleteHotel, getHotel,  getHotelsByPrice,  getHotelsByRating,  updateHotel, } from "../controller/hotelController.js";
+import { createHotel,  deleteHotel, getAllHotels, getHotel,  getHotelsByPrice,  getHotelsByRating,    updateHotel, } from "../controller/hotelController.js";
 import upload from "../helpers/multer.js";
 
 const router = express.Router()
@@ -30,14 +30,22 @@ const parseFormData = (req, res, next) => {
 
 
 
-router.post("/",upload.single('image'), parseFormData,createHotel)
+//router.post("/",upload.single('image'), parseFormData,createHotel)
 
-router.get("/byrating", getHotelsByRating) 
-router.get("/byprice", getHotelsByPrice) 
+//router.get("/byrating", getHotelsByRating) 
+//router.get("/byprice", getHotelsByPrice) 
 
 
-router.get("/:id", getHotel)
-router.put("/:id",upload.single('image'), parseFormData, updateHotel)
-router.delete("/:id",deleteHotel)
+//router.get("/:id", getHotel)
+//router.put("/:id",upload.single('image'), parseFormData, updateHotel)
+//router.delete("/:id",deleteHotel)
+
+router.get("/bycity",getAllHotels)
+
+
+//router.get("/city", HotelsBYCity)
+
  
 export default router;
+
+//http://localhost:8000/hotels?city=Shimla&radius=10
