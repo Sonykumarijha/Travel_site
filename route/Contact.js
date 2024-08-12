@@ -1,14 +1,12 @@
 import express from "express"
-import { createContact } from "../controller/contactController.js";
-//import { createCar, deleteCar, getCar, getCarsByRating, updateCar } from "../controller/carController.js";
+import { createContact, deleteContact, getContact, updateContact } from "../controller/contactController.js";
 
 const router = express.Router()
 
 router.post("/", createContact)
-// router.put("/:id", updateCar)
-// router.delete("/:id", deleteCar)
-// router.get("/carbyid/:id", getCar)
-// router.get("/byrating",getCarsByRating)
+router.put("/:id", updateContact)
+router.delete("/:id", deleteContact)
+router.get("/byid/:id", getContact)
 
 
 

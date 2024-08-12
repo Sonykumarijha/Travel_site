@@ -8,7 +8,7 @@ import nodemailer from 'nodemailer';
 
 import { getRandomSixDigit } from "../helpers/randomValues.js";
 
-export const createUser = async (req, res) => {
+export const createUser = async (req, res, next) => {
 
     try {
         const { name, email, phone, password } = req.body
@@ -37,22 +37,22 @@ export const createUser = async (req, res) => {
         return res.status(200).json({ message: 'user created successfully', user: user, imageUrl: result.secure_url })
 
     } catch (error) {
-        return res.status(400).json({ message: 'user not created', error: error })
+        next(error);
     }
 }
 
-export const getUser = async (req, res) => {
+export const getUser = async (req, res, next) => {
     try {
         const userId = req.params.id
         let user = await userModel.findById(userId)
         return res.status(200).json({ user: user })
     } catch (error) {
-        return res.status(400).json({ message: "error" })
+        next(error);
     }
 
 }
 
-export const updateUser = async (req, res) => {
+export const updateUser = async (req, res,next) => {
     try {
         const userId = req.params.id;
 
@@ -86,12 +86,12 @@ export const updateUser = async (req, res) => {
 
         return res.status(200).json({ message: "Updated successfully", updatedUser: updatedUser });
     } catch (error) {
-        return res.status(400).json({ message: 'User not updated', error: error });
+        next(error);
     }
 };
 
 
-export const deleteUser = async (req, res) => {
+export const deleteUser = async (req, res, next) => {
     try {
         const userId = req.params.id
 
@@ -104,13 +104,13 @@ export const deleteUser = async (req, res) => {
         await userModel.findByIdAndDelete(userId)
         return res.status(200).json({ message: "Deleted successfully" })
     } catch (error) {
-        return res.status(400).json({ message: "****error****" })
+        next(error);
 
     }
 
 }
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -140,12 +140,11 @@ export const login = async (req, res) => {
 
         return res.status(200).json({ message: "Login Successfully", token: token });
     } catch (error) {
-        console.error("Login error:", error);
-        return res.status(500).json({ message: "Something went wrong", error: error.message });
+        next(error);
     }
 };
 
- export const resetPassword = async (req, res) => {
+ export const resetPassword = async (req, res, next) => {
         try {
             const { email } = req.body
 
@@ -173,16 +172,16 @@ export const login = async (req, res) => {
             //let testAccount = await nodemailer.createTestAccount()
             
             const transporter = nodemailer.createTransport({
-                host: 'smtp.ethereal.email',
+                host: process.env.ETHEREAL_HOST,
                 port: 587,
                 auth: {
-                    user: 'trudie89@ethereal.email',
-                    pass: 'JPBUyN8ept8yUYM7zM'
+                    user: process.env.ETHEREAL_USER,
+                    pass: process.env.ETHEREAL_PASSWORD
                 }
             });
 
             const info = await transporter.sendMail({
-                from: 'trudie89@ethereal.email', 
+                from: process.env.ETHEREAL_USER, 
                 to: "sony@mailinator.com",
                 subject: 'Your OTP Code',
                 text: `Your OTP code is ${updatedUser.otp}`, 
@@ -198,12 +197,12 @@ export const login = async (req, res) => {
             return res.status(200).json({ message: "otp sent successfully", otp: updatedUser.otp, info })
         
         } catch (error) {
-            return res.status(400).json({ message: "something went wrong" })
+            next(error);
         }
     }
 
 
-export const verifyOtp = async (req,res) => {
+export const verifyOtp = async (req,res, next) => {
     try {
         let {email,otp} = req.body
         if (!otp || !email) {
@@ -230,11 +229,11 @@ export const verifyOtp = async (req,res) => {
 
         return res.status(400).json({message: "otp verify successfully", user})
     } catch (error) {
-        return res.status(400).json({message: "something went wrong"})
+        next(error);
     }
 }
 
-export const resetNewPassword = async (req,res) => {
+export const resetNewPassword = async (req,res, next) => {
     try {
         const {email, new_password} = req.body
         let user = await userModel.findOne({email})
@@ -245,7 +244,7 @@ export const resetNewPassword = async (req,res) => {
         let updatedUser = await userModel.findByIdAndUpdate(user._id, {password: hashedPassword},{new:true})
         return res.status(200).json({message: "New password reset successfully"})
     } catch (error) {
-        return res.status(400).json({mesage: "something went wrong"})
+        next(error);
     }
 }
 

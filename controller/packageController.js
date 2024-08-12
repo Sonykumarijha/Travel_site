@@ -1,7 +1,7 @@
 import cloudinary from "../helpers/cloudinary.js"
 import packageModel from "../model/packages.js"
 
-export const createPackage = async (req, res) => {
+export const createPackage = async (req, res,next) => {
     try {
         const { title, package_type, description, duration, destination, origin, price, day_plan, review, meta } = req.body
         const image = req.file ? req.file.path : null
@@ -13,15 +13,18 @@ export const createPackage = async (req, res) => {
         // Upload image to Cloudinary
         const result = await cloudinary.uploader.upload(image);
 
+        let Package =  await packageModel.findByIdAndUpdate(holidayPackage._id, {image: result.secure_url}, {new: true})
+        
 
-        return res.status(200).json({ message: 'package created successfully', package: holidayPackage, imageUrl: result.secure_url })
+
+        return res.status(200).json({ message: 'package created successfully', package: Package, imageUrl: result.secure_url })
     } catch (error) {
 
-        return res.status(400).json({ message: 'package not created', error: error })
+        next(error);
     }
 }
 
-export const getPackage = async (req, res) => {
+export const getPackage = async (req, res,next) => {
     try {
         let packageId = req.params.id
         if (!packageId) {
@@ -34,22 +37,22 @@ export const getPackage = async (req, res) => {
 
         return res.status(200).json({ package: holidayPackage })
     } catch (error) {
-        return res.status(400).json({ message: "something went wrong" })
+        next(error);
     }
 }
 
-export const getPackagesByType = async (req, res) => {
+export const getPackagesByType = async (req, res,next) => {
     try {
         const { packagetype } = req.query
 
         let PackagesByType = await packageModel.find({ package_type: { $regex: new RegExp(`^${packagetype}$`, 'i') } })
         return res.status(200).json({ [`${packagetype} packages`]: PackagesByType })
     } catch (error) {
-        return res.status(400).json({ message: "something went wrong" })
+        next(error);
     }
-}
+} 
 
-export const getPackagesByDestination = async (req, res) => {
+export const getPackagesByDestination = async (req, res, next) => {
     try {
         const { destination } = req.query
 
@@ -58,11 +61,11 @@ export const getPackagesByDestination = async (req, res) => {
         });
         return res.status(200).json({ packages: PackagesByDestination })
     } catch (error) {
-        return res.status(400).json({ message: "something went wrong" })
+        next(error);
     }
 }
 
-export const updatedPackage = async (req, res) => {
+export const updatedPackage = async (req, res, next) => {
     try {
         let packageId = req.params.id
 
@@ -81,12 +84,12 @@ export const updatedPackage = async (req, res) => {
 
 
     } catch (error) {
-        return res.status(400).json({ message: "something went wrong" })
+        next(error);
 
     }
 }
 
-export const deletePackage = async (req, res) => {
+export const deletePackage = async (req, res, next) => {
     try {
         let packageId = req.params.id
         if (!packageId) {
@@ -95,7 +98,7 @@ export const deletePackage = async (req, res) => {
         await packageModel.findByIdAndDelete(packageId)
         return res.status(400).json({ message: " deleted successfully" })
     } catch (error) {
-        return res.status(400).json({ message: "something went wrong" })
+        next(error);
     }
 }
 

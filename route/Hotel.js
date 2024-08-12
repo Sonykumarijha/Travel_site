@@ -1,8 +1,10 @@
 import express from "express"
 import multer from "multer";
 
-import { createHotel,  deleteHotel, getAllHotels, getHotel,  getHotelsByPrice,  getHotelsByRating,    updateHotel, } from "../controller/hotelController.js";
-import upload from "../helpers/multer.js";
+// import { createHotel,  deleteHotel, getAllHotels, getHotel,  getHotelsByPrice,  getHotelsByRating,    updateHotel, } from "../controller/hotelController.js";
+import { getAllHotels } from "../controller/hotelController.js";
+
+//import upload from "../helpers/multer.js";
 
 const router = express.Router()
 

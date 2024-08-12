@@ -6,42 +6,44 @@ import cloudinary from "../helpers/cloudinary.js";
 import axios from 'axios';
 
 
-export const createHotel = async (req, res) => {
-    try {
-        const { name, located, review, price, meta } = req.body;
-        const { country, state, city, address, latitude, longitude } = located;
-        const image = req.file ? req.file.path : null
+// export const createHotel = async (req, res, next) => {
+//     try {
+//         const { name, located, review, price, meta } = req.body;
+//         const { country, state, city, address, latitude, longitude } = located;
+//         const image = req.file ? req.file.path : null
 
-        if (!name || !country || !state || !city || !latitude || !longitude || !review || !price || !meta || !image) {
-            return res.status(400).json({ message: 'Invalid payload' });
-        }
+//         if (!name || !country || !state || !city || !latitude || !longitude || !review || !price || !meta || !image) {
+//             return res.status(400).json({ message: 'Invalid payload' });
+//         }
 
-        const cityCoordinates = await getCityCoordinates(city, country);
-        if (!cityCoordinates) {
-            return res.status(400).json({ message: 'Unable to geocode city' });
-        }
+//         const cityCoordinates = await getCityCoordinates(city, country);
+//         if (!cityCoordinates) {
+//             return res.status(400).json({ message: 'Unable to geocode city' });
+//         }
 
-        const distance = calculateDistance(cityCoordinates.lat, cityCoordinates.lng, latitude, longitude);
+//         const distance = calculateDistance(cityCoordinates.lat, cityCoordinates.lng, latitude, longitude);
 
-        let hotel = await hotelModel.create({ 
-            name, 
-            located: { country, state, city, address, latitude, longitude },
-            distance: `${distance.toFixed(2)} km from ${city}`, 
-            review, 
-            price, 
-            meta, 
-            image 
-        });
+//         let hotel = await hotelModel.create({ 
+//             name, 
+//             located: { country, state, city, address, latitude, longitude },
+//             distance: `${distance.toFixed(2)} km from ${city}`, 
+//             review, 
+//             price, 
+//             meta, 
+//             image 
+//         });
 
-        // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(image);
+//         // Upload image to Cloudinary
+//         const result = await cloudinary.uploader.upload(image);
 
-        return res.status(200).json({ message: 'Hotel created successfully', hotel:hotel,imageUrl: result.secure_url });
-    } catch (error) {
-        console.log(error);
-        return res.status(400).json({ message: 'Hotel not created', error });
-    }
-}; 
+//         return res.status(200).json({ message: 'Hotel created successfully', hotel:hotel,imageUrl: result.secure_url });
+//     } catch (error) {
+//         next(error);
+
+//     }
+// }; 
+
+
 
 
 
@@ -83,146 +85,125 @@ const getCityCoordinates = async (city, country) => {
 };
 
 
-export const getHotelsByRating = async (req, res) => {
-    try {
-        const { country } = req.query; // Extract country from query parameters
+// export const getHotelsByRating = async (req, res) => {
+//     try {
+//         const { country } = req.query; // Extract country from query parameters
 
-        if (!country) {
-            return res.status(400).json({ message: "Country parameter is required" });
-        }
-        let hotels = await hotelModel.find({ "located.country": { $regex: `^${country}$`, $options: 'i' } }).sort({ "review.rating": -1 }).limit(10);
-        return res.status(200).json({ hotels: hotels });
-    } catch (error) {
-        console.log(error);
-        return res.status(400).json({ message: "*****Unable to fetch top-rated hotels*****" });
-    }
-};
+//         if (!country) {
+//             return res.status(400).json({ message: "Country parameter is required" });
+//         }
+//         let hotels = await hotelModel.find({ "located.country": { $regex: `^${country}$`, $options: 'i' } }).sort({ "review.rating": -1 }).limit(10);
+//         return res.status(200).json({ hotels: hotels });
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(400).json({ message: "*****Unable to fetch top-rated hotels*****" });
+//     }
+// };
 
 
 
-export const getHotelsByPrice = async (req, res) => {
-    try {
-        const { country } = req.query;
+// export const getHotelsByPrice = async (req, res) => {
+//     try {
+//         const { country } = req.query;
 
-        if (!country) {
-            return res.status(400).json({ message: "Country parameter is required" });
-        }
-        let hotels = await hotelModel.find({ "located.country": { $regex: `^${country}$`, $options: 'i' } }).sort({ "price": 1 }).limit(10);
-        return res.status(200).json({ hotels: hotels });
-    } catch (error) {
-        console.log(error);
-        return res.status(400).json({ message: "*****Unable to fetch hotels by lowest price*****" });
-    }
-};
+//         if (!country) {
+//             return res.status(400).json({ message: "Country parameter is required" });
+//         }
+//         let hotels = await hotelModel.find({ "located.country": { $regex: `^${country}$`, $options: 'i' } }).sort({ "price": 1 }).limit(10);
+//         return res.status(200).json({ hotels: hotels });
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(400).json({ message: "*****Unable to fetch hotels by lowest price*****" });
+//     }
+// };
 
 
 //--------------------------------------------------------------------------------------
 
 
 
-export const getHotel = async (req,res) => {
-    try{
-        let hotelId = req.params.id
-        let hotel = await hotelModel.findById(hotelId)
-        return res.status(200).json({hotel:hotel})
-
-    }catch(error) {
-        console.log(error);
-        return res.status(400).json({message: "error"})
-    }
-}
-
-
-export const updateHotel = async (req, res) => {
-    try {
-        const hotelId = req.params.id;
-
-        const hotel = await hotelModel.findById(hotelId);
-
-        if (!hotel) {
-            return res.status(400).json({ message: "Hotel not found" });
-        }
-
-        const { name, located,review,price,meta } = req.body;
-        const { country, state, city, address, latitude, longitude } = located;
-        const newImage = req.file ? req.file.path : hotel.image;
-
-        const cityCoordinates = await getCityCoordinates(city, country);
-        if (!cityCoordinates) {
-            return res.status(400).json({ message: 'Unable to geocode city' });
-        }
-
-        const distance = calculateDistance(cityCoordinates.lat, cityCoordinates.lng, latitude, longitude);
-
-        const data = {
-        name,
-        located:{ country, state, city, address, latitude, longitude },
-        distance: `${distance.toFixed(2)} km from ${city}`,
-        review,
-        price,
-        meta,
-        image:newImage
-    }
-
-        if (newImage && hotel.image) {
-            const oldImagePath = path.join('uploads/', '..', hotel.image);
-            fs.unlink(oldImagePath, (err) => {
-                if (err) {
-                    console.error('Failed to delete old image:', err);
-                }
-            });
-        }
-
-
-        const updatedHotel = await hotelModel.findByIdAndUpdate(hotelId, data, { new: true });
-
-        return res.status(200).json({ message: "Updated successfully", updatedHotel: updatedHotel });
-    } catch (error) {
-        console.log(error,'error**');
-        return res.status(400).json({ message: 'Hotel not updated', error: error });
-    }
-};
-
-
-
-// export const updateHotel = async (req,res) => {
+// export const getHotel = async (req,res) => {
 //     try{
-//         let hotel_Id = req.params.id
-//         let hotel = await hotelModel.findById(hotel_Id)
-//         if (!hotel) {
-//             return res.status(400).json({message:"no hotel found"})
-//         }
+//         let hotelId = req.params.id
+//         let hotel = await hotelModel.findById(hotelId)
+//         return res.status(200).json({hotel:hotel})
 
-
-//         let updated_hotel = await hotelModel.findByIdAndUpdate(hotel_Id,req.body,{
-//             new:true
-//         })
-
-//         return res.status(200).json({message: "updated successfully", updatedHotel: updated_hotel})
-
-//     }catch(error){
+//     }catch(error) {
 //         console.log(error);
-//         return res.status(400).json({message: "***************error***************"})
+//         return res.status(400).json({message: "error"})
 //     }
 // }
 
-export const deleteHotel = async (req,res) => {
-    try {
-        let hotel_Id = req.params.id
-        await hotelModel.findByIdAndDelete(hotel_Id)
-        return res.status(200).json({message: "deleted successfully"})
 
-    } catch (error) {
-        return res.status(400).json({message: "not deleted"})
-    }
-}
+// export const updateHotel = async (req, res) => {
+//     try {
+//         const hotelId = req.params.id;
+
+//         const hotel = await hotelModel.findById(hotelId);
+
+//         if (!hotel) {
+//             return res.status(400).json({ message: "Hotel not found" });
+//         }
+
+//         const { name, located,review,price,meta } = req.body;
+//         const { country, state, city, address, latitude, longitude } = located;
+//         const newImage = req.file ? req.file.path : hotel.image;
+
+//         const cityCoordinates = await getCityCoordinates(city, country);
+//         if (!cityCoordinates) {
+//             return res.status(400).json({ message: 'Unable to geocode city' });
+//         }
+
+//         const distance = calculateDistance(cityCoordinates.lat, cityCoordinates.lng, latitude, longitude);
+
+//         const data = {
+//         name,
+//         located:{ country, state, city, address, latitude, longitude },
+//         distance: `${distance.toFixed(2)} km from ${city}`,
+//         review,
+//         price,
+//         meta,
+//         image:newImage
+//     }
+
+//         if (newImage && hotel.image) {
+//             const oldImagePath = path.join('uploads/', '..', hotel.image);
+//             fs.unlink(oldImagePath, (err) => {
+//                 if (err) {
+//                     console.error('Failed to delete old image:', err);
+//                 }
+//             });
+//         }
+
+
+//         const updatedHotel = await hotelModel.findByIdAndUpdate(hotelId, data, { new: true });
+
+//         return res.status(200).json({ message: "Updated successfully", updatedHotel: updatedHotel });
+//     } catch (error) {
+//         console.log(error,'error**');
+//         return res.status(400).json({ message: 'Hotel not updated', error: error });
+//     }
+// };
+
+
+
+
+// export const deleteHotel = async (req,res) => {
+//     try {
+//         let hotel_Id = req.params.id
+//         await hotelModel.findByIdAndDelete(hotel_Id)
+//         return res.status(200).json({message: "deleted successfully"})
+
+//     } catch (error) {
+//         return res.status(400).json({message: "not deleted"})
+//     }
+// }
 
 
 
 //-------------------------------- by The Nominatim API from OpenStreetMap (working)    (VIATOR**) --------------------------------------------------------------------
 
-export const getAllHotels = async (req, res) => {
-    console.log('9999999999999999999999999999999999');
+export const getAllHotels = async (req, res,next) => {
     
     const { city, checkin_date, checkout_date } = req.query;
 
@@ -232,7 +213,7 @@ export const getAllHotels = async (req, res) => {
 
     try {
         // Perform a text search for hotels in the specified city
-        const hotelResponse = await axios.get('https://nominatim.openstreetmap.org/search', {
+        const hotelResponse = await axios.get(process.env.NOMINATIM_URL, {
             params: {
                 q: `hotels in ${city}, Himachal Pradesh`,
                 format: 'json',
@@ -248,7 +229,7 @@ export const getAllHotels = async (req, res) => {
         res.json({ city, hotels: filteredHotels });
     } catch (error) {
         console.error('Error fetching hotels:', error.response ? error.response.data : error.message);
-        res.status(500).json({ error: 'An error occurred while fetching hotels' });
+        next(error);
     }
 };
 

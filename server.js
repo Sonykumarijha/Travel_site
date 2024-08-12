@@ -16,6 +16,8 @@ import packageRouter from "./route/Package.js"
 import userRouter from "./route/User.js"
 import contactRouter from "./route/Contact.js"
 
+import errorHandler from "./helpers/error_middleware.js";
+
 
 
 const app = express()
@@ -43,6 +45,9 @@ app.use("/contacts", contactRouter)
 
 
 app.use("/users", userRouter)
+
+app.use(errorHandler);
+
 
 
 

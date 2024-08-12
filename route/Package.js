@@ -23,7 +23,7 @@ const parseFormData = (req, res, next) => {
 };
 
 router.post("/", upload.single('image'), parseFormData,createPackage)
- router.get("/package/:id", getPackage) 
+router.get("/package/:id", getPackage) 
 router.put("/:id", updatedPackage)
 router.delete("/:id",deletePackage) 
 
