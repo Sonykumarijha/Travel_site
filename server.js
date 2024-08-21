@@ -12,9 +12,11 @@ import vehicleRouter from "./route/Vehicle.js"
 import carRouter from "./route/Car.js"
 import activityRouter from "./route/Activity.js"
 import packageRouter from "./route/Package.js"
-
-import userRouter from "./route/User.js"
 import contactRouter from "./route/Contact.js"
+import userRouter from "./route/User.js"
+import bookingRouter from "./route/Booking.js"
+import ticketRouter from "./route/Tickets.js"
+
 
 import errorHandler from "./helpers/error_middleware.js";
 
@@ -40,8 +42,9 @@ app.use("/vehicles", vehicleRouter)
 app.use("/cars", carRouter)
 app.use("/activities", activityRouter)
 app.use("/packages", packageRouter)
-
 app.use("/contacts", contactRouter)
+app.use("/bookings", bookingRouter)
+app.use("/tickets", ticketRouter)
 
 
 app.use("/users", userRouter)

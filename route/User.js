@@ -2,8 +2,8 @@ import express from "express";
 //import multer from "multer";
 import fs from 'fs';
 import path from 'path';
-import { createUser, deleteUser, getUser, login, resetNewPassword, resetPassword, updateUser, verifyOtp } from "../controller/userController.js";
-import upload from "../helpers/multer.js";
+import { createUser, deleteUser, getAllUsers, getUser, login, resetNewPassword, resetPassword, updateUser, verifyOtp } from "../controller/userController.js";
+import upload, { uploadSingleImage } from "../helpers/multer.js";
 
 const router = express.Router()
 
@@ -20,14 +20,16 @@ const router = express.Router()
 //const upload = multer({ storage });
 
 
-router.post("/", upload.single('image'), createUser)
-router.get("/:id", getUser)
-router.put("/:id",upload.single('image'),updateUser)
+router.post("/", uploadSingleImage.single('image'), createUser)
+router.get("/id/:id", getUser)
+router.put("/:id",uploadSingleImage.single('image'),updateUser)
 router.delete("/:id", deleteUser)
 router.post("/login",login)
 router.post("/resetpassword",resetPassword)
 router.post("/verifyotp", verifyOtp)
 router.post("/resetnewpassword",resetNewPassword)
+router.get("/allusers",getAllUsers)
+
 
 
 

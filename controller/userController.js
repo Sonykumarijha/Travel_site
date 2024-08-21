@@ -5,13 +5,17 @@ import path from 'path';
 import jwt from 'jsonwebtoken';
 import cloudinary from "../helpers/cloudinary.js";
 import nodemailer from 'nodemailer';
+//import AWS from "aws-sdk"
 
 import { getRandomSixDigit } from "../helpers/randomValues.js";
+
+
+
 
 export const createUser = async (req, res, next) => {
 
     try {
-        const { name, email, phone, password } = req.body
+        const { name, email, phone, password,role } = req.body
         const image = req.file ? req.file.path : null;
 
         if (!name || !email || !phone || !password) {
@@ -28,13 +32,15 @@ export const createUser = async (req, res, next) => {
 
         let hashedPassword = await bcrypt.hash(password, 10)
 
-        let user = await userModel.create({ name, email, phone, password: hashedPassword, image })
+        let user = await userModel.create({ name, email, phone, password: hashedPassword, image, role })
 
 
         // Upload image to Cloudinary
         const result = await cloudinary.uploader.upload(image);
 
-        return res.status(200).json({ message: 'user created successfully', user: user, imageUrl: result.secure_url })
+        let updatedUser = await userModel.findByIdAndUpdate(user._id, {image_url:result.secure_url}, {new:true})
+
+        return res.status(201).json({ message: 'user created successfully', user: updatedUser, imageUrl: result.secure_url })
 
     } catch (error) {
         next(error);
@@ -55,6 +61,9 @@ export const getUser = async (req, res, next) => {
 export const updateUser = async (req, res,next) => {
     try {
         const userId = req.params.id;
+        if (!userId) {
+            return res.status(400).json({ message: "user id is required" });
+        }
 
         const user = await userModel.findById(userId);
 
@@ -248,6 +257,70 @@ export const resetNewPassword = async (req,res, next) => {
     }
 }
 
+export const getAllUsers = async (req,res,next) => {
+    try {
+        let users = await userModel.find({role:"CUSTOMER"})
+        return res.status(200).json({users})
+        
+    } catch (error) {
+        next(error)
+    }
+}
 
 
 
+
+// // Configure AWS SDK
+// const s3 = new AWS.S3({
+//     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//     region: process.env.AWS_REGION // Set your region
+// });
+
+// export const createUser = async (req, res, next) => {
+//     try {
+//         const { name, email, phone, password, role } = req.body;
+//         const image = req.file ? req.file.path : null;
+
+//         if (!name || !email || !phone || !password) {
+//             return res.status(400).json({ message: 'Invalid payload' });
+//         }
+//         if (!/^\S+@\S+\.\S+$/.test(email)) {
+//             return res.status(400).json({ message: 'Invalid email format' });
+//         }
+
+//         const existingUser = await userModel.findOne({ email });
+//         if (existingUser) {
+//             return res.status(400).json({ message: 'Email already exists' });
+//         }
+
+//         let hashedPassword = await bcrypt.hash(password, 10);
+        
+//         // Create user in DB without image URL
+//         let user = await userModel.create({ name, email, phone, password: hashedPassword, role });
+
+//         if (image) {
+//             // Read the image file from the file system
+//             const fileContent = fs.readFileSync(image);
+            
+//             // Set up S3 upload parameters
+//             const params = {
+//                 Bucket: process.env.AWS_S3_BUCKET_NAME, // Your bucket name
+//                 Key: `users/${user._id}/${Date.now()}_${req.file.originalname}`, // File name you want to save as in S3
+//                 Body: fileContent,
+//                 ContentType: req.file.mimetype // MIME type of the file
+//             };
+
+//             // Uploading files to the bucket
+//             const s3Result = await s3.upload(params).promise();
+            
+//             // Update user with image URL from S3
+//             user = await userModel.findByIdAndUpdate(user._id, { image_url: s3Result.Location }, { new: true });
+//         }
+
+//         return res.status(200).json({ message: 'User created successfully', user });
+
+//     } catch (error) {
+//         next(error);
+//     }
+// };

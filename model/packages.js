@@ -16,7 +16,7 @@ const reviewSchema = new Schema(
             min: 1,
             max: 5
         }
-    }, 
+    },
     {
         _id: false,
         timestamps: true
@@ -32,13 +32,38 @@ const packageSchema = new Schema(
         package_type: {
             type: String,
             enum: ['honeymoon', 'adventurous', 'religious', 'festive', 'historical', 'offsite'],
-            default: 'adventurous', // Set default value to 'adventure'
+            default: 'adventurous',
             required: false
         },
         image: {
-            type: String,
-            required: false
+            thumbnail: {
+                type: String,  
+                required: false
+            },
+            images: {
+                type: [String],  
+                required: false,
+                validate: {
+                    validator: function (value) {
+                        return value.length <= 10;  
+                    },
+                    message: 'You can only upload up to 10 images.'
+                }
+            }
         },
+        image_url: {
+            thumbnail_url: {
+                type: String,  
+                required: false,
+                default: ''
+            },
+            images_url: {
+                type: [String],  
+                required: false,
+                default: []
+            }
+        },
+
         description: {
             type: String,
             required: true

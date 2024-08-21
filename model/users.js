@@ -6,13 +6,29 @@ const userSchema = new Schema(
             type: String,
             required: true
         },
+        role: {
+            type: String,
+            required: true,
+            enum: ['ADMIN', 'CUSTOMER'],
+            default: 'CUSTOMER'
+        },
         email:{
             type: String,
-            required: true
+            required: true,
+            unique: true,
+
         },
         phone: {
             type: Number,
-            require: true
+            required: true,
+           unique: true,
+            validate: {
+                validator: function(value) {
+                    // Example: Validate if the phone number has exactly 10 digits
+                    return /^[0-9]{10}$/.test(value.toString());
+                },
+                message: props => `${props.value} is not a valid phone number!`
+            }
         },
         password:{
             type: String,
@@ -20,7 +36,10 @@ const userSchema = new Schema(
         },
         image:{
             type: String,
-
+         
+        },
+        image_url:{
+            type: String,
             
         },
         access_token: {

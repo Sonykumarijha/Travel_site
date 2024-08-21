@@ -21,10 +21,14 @@ const parseFormData = (req, res, next) => {
     }
     next();
 };
+router.post("/", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'images', maxCount: 10 }]), parseFormData, createPackage);
 
-router.post("/", upload.single('image'), parseFormData,createPackage)
-router.get("/package/:id", getPackage) 
-router.put("/:id", updatedPackage)
+//router.post("/", upload.single('image'), parseFormData,createPackage)
+router.get("/id/:id", getPackage) 
+//router.put("/:id",upload.single('image'), updatedPackage)
+router.put("/:id", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'images', maxCount: 10 }]), parseFormData, updatedPackage);
+
+
 router.delete("/:id",deletePackage) 
 
 router.get("/packagetype",getPackagesByType)

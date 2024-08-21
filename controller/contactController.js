@@ -73,3 +73,12 @@ export const deleteContact = async (req,res, next) => {
         next(error);
     }
 }
+
+export const getAllContact = async (req,res,next) => {
+    try {
+        let contacts =  await contactModel.find()
+        return res.status(200).json({contacts})
+    } catch (error) {
+        next(error)
+    }
+}
