@@ -1,5 +1,5 @@
 import express from "express";
-import { createPackage, deletePackage, getPackage, getPackagesByDestination, getPackagesByType, updatedPackage } from "../controller/packageController.js";
+import { createPackage, deletePackage, getAllPackages, getPackage, getPackagesByDestination, getPackagesByType, updatedPackage } from "../controller/packageController.js";
 import upload from "../helpers/multer.js";
 
 const router = express.Router()
@@ -25,6 +25,7 @@ router.post("/", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'ima
 
 //router.post("/", upload.single('image'), parseFormData,createPackage)
 router.get("/id/:id", getPackage) 
+router.get("/all",getAllPackages)
 //router.put("/:id",upload.single('image'), updatedPackage)
 router.put("/:id", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'images', maxCount: 10 }]), parseFormData, updatedPackage);
 

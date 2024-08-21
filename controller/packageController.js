@@ -60,26 +60,6 @@ export const createPackage = async (req, res, next) => {
     }
 };
 
-// export const createPackage = async (req, res, next) => {
-//     try {
-//         const { title, package_type, description, duration, destination, origin, price, day_plan, review, meta } = req.body
-//         const image = req.file ? req.file.path : null
-//         if (!title || !description || !duration || !destination || !origin || !price || !day_plan) {
-//             return res.status(400).json({ message: 'invalid payload' })
-//         }
-//         let Package = await packageModel.create({ title, package_type, description, duration: `${duration} days`, destination, origin, price, day_plan, review, meta, image })
-
-//         // Upload image to Cloudinary
-//         const result = await cloudinary.uploader.upload(image);
-
-//         let updatedPackage =  await packageModel.findByIdAndUpdate(Package._id, {image_url: result.secure_url}, {new: true})
-
-//         return res.status(200).json({ message: 'package created successfully', package: updatedPackage })
-//     } catch (error) {
-
-//         next(error);
-//     }
-// }
 
 export const getPackage = async (req, res, next) => {
     try {
@@ -93,6 +73,15 @@ export const getPackage = async (req, res, next) => {
         }
 
         return res.status(200).json({ package: holidayPackage })
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getAllPackages = async (req, res, next) => {
+    try {
+        let holidayPackages = await packageModel.find()
+        return res.status(200).json({ packages: holidayPackages })
     } catch (error) {
         next(error);
     }
@@ -122,63 +111,6 @@ export const getPackagesByDestination = async (req, res, next) => {
     }
 }
 
-// export const updatedPackage = async (req, res, next) => {
-//     console.log('___updatedPackage**', req.body);
-
-//     try {
-//         const packageId = req.params.id;
-
-//         if (!packageId) {
-//             return res.status(400).json({ message: "Package ID is required" });
-//         }
-
-//         const holidayPackage = await packageModel.findById(packageId);
-//         if (!holidayPackage) {
-//             return res.status(404).json({ message: "No package exists with this ID" });
-//         }
-
-//         const { title, package_type, description, duration, destination, origin, price, day_plan, review, meta } = req.body;
-//         const newImage = req.file ? req.file.path : holidayPackage.image;
-
-       
-
-//         if (newImage && holidayPackage.image) {
-//             const oldImagePath = path.join('uploads/', '..', holidayPackage.image);
-//             fs.unlink(oldImagePath, (err) => {
-//                 if (err) {
-//                     console.error('Failed to delete old image:', err);
-//                 }
-//             });
-//         }
-//         const result = await cloudinary.uploader.upload(newImage);
-
-//         const data = {
-//             title: title || holidayPackage.title,
-//             package_type: package_type || holidayPackage.package_type,
-//             description: description || holidayPackage.description,
-//             duration: duration || holidayPackage.duration,
-//             destination: destination || holidayPackage.destination,
-//             origin: origin || holidayPackage.origin,
-//             price: price || holidayPackage.price,
-//             day_plan: day_plan || holidayPackage.day_plan,
-//             review: review || holidayPackage.review,
-//             meta: meta || holidayPackage.meta,
-//             image: newImage,
-//             image_url: result.secure_url 
-
-//         };
-
-
-//         const updatedPackage = await packageModel.findByIdAndUpdate(packageId, data, { new: true });
-
-
-
-//         return res.status(200).json({ message: "Updated successfully", updated_package: updatedPackage, imageUrl: result.secure_url });
-
-//     } catch (error) {
-//         next(error);
-//     }
-// };
 
 export const updatedPackage = async (req, res, next) => {
 
@@ -201,13 +133,15 @@ export const updatedPackage = async (req, res, next) => {
         const newImages = req.files['images'] ? req.files['images'].map(file => file.path) : holidayPackage.image.images;
 
         // Remove old thumbnail image if updated
-        if (newThumbnail && holidayPackage.image.thumbnail && newThumbnail !== holidayPackage.image.thumbnail) {
-            const oldThumbnailPath = path.join('uploads/', path.basename(holidayPackage.image.thumbnail));
-            try {
-                await unlinkAsync(oldThumbnailPath);
-            } catch (err) {
-                console.error('Failed to delete old thumbnail image:', err);
-            }
+       
+        if (newThumbnail && holidayPackage.image.thumbnail) {
+            
+            const oldImagePath = path.join('uploads/', '..', holidayPackage.image.thumbnail);
+            fs.unlink(oldImagePath, (err) => {
+                if (err) {
+                    console.error('Failed to delete old image:', err);
+                }
+            });
         }
 
         // Upload new thumbnail image if present
@@ -219,6 +153,7 @@ export const updatedPackage = async (req, res, next) => {
 
         // Remove old images if updated
         if (newImages.length > 0 && holidayPackage.image.images.length > 0) {
+            
             const oldImagePaths = holidayPackage.image.images.map(img => path.join('uploads/', path.basename(img)));
             for (const oldImagePath of oldImagePaths) {
                 try {
@@ -280,4 +215,3 @@ export const deletePackage = async (req, res, next) => {
     }
 }
 
-//{"title": "Amazing Goa Tour", "description": "Experience the best of Goa in 3 days","duration": "3 ","destination": "Goa","origin": "Delhi","price": 50000,"day_plan": {"a":"a","b": "a"},"meta": "meta data"}

@@ -6,7 +6,6 @@ export const createBooking = async(req,res,next) => {
         const {user_id,package_id,tripStartDate,tripEndDate,numberOfGuests,paymentStatus,bookingStatus,meta} = req.body
         const Package = await packageModel.findById(package_id)
         const totalPrice = Package.price
-        console.log(Package,'____________Package');
         
         if (!user_id || !package_id || !tripStartDate || !tripEndDate || !numberOfGuests) {
             return res.status(400).json({messagee: "invalid payload"})
@@ -43,13 +42,13 @@ export const getAllBooking = async (req,res,next) => {
     }
 }
 
-export const updateBooking = async (req, res,next) => {
+export const cancelBooking = async (req, res,next) => {
     try {
         let bookingId = req.params.id
         if (!bookingId) {
             return res.status(400).json({message: "booking id is required"})
         }
-        await bookingModel.findByIdAndUpdate(bookingId, req.body, {
+        await bookingModel.findByIdAndUpdate(bookingId, {bookingStatus:"CANCELLED"}, {
             new: true
         })
 

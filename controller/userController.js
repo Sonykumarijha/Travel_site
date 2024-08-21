@@ -40,7 +40,7 @@ export const createUser = async (req, res, next) => {
 
         let updatedUser = await userModel.findByIdAndUpdate(user._id, {image_url:result.secure_url}, {new:true})
 
-        return res.status(201).json({ message: 'user created successfully', user: updatedUser, imageUrl: result.secure_url })
+        return res.status(201).json({ message: 'user created successfully', user: updatedUser})
 
     } catch (error) {
         next(error);
@@ -72,13 +72,18 @@ export const updateUser = async (req, res,next) => {
         }
 
         const { name, phone, password } = req.body;
-        const newImage = req.file ? req.file.path : null;
+        const newImage = req.file ? req.file.path : user.image;
+
+         // Upload image to Cloudinary
+         const result = await cloudinary.uploader.upload(newImage);
+
 
         const data = {
             name: name,
-            phone: phone,
-            password: password,
-            image: newImage
+          //  phone: phone,
+           // password: password,
+            image: newImage,
+            image_url:result.secure_url
         }
 
         if (newImage && user.image) {
