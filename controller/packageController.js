@@ -10,7 +10,7 @@ const unlinkAsync = promisify(fs.unlink);
 export const createPackage = async (req, res, next) => {
     try {
         const { title, package_type, description, duration, destination, origin, price, day_plan, review, meta } = req.body;
-        const files = req.files; 
+        const files = req.files;
 
         if (!title || !description || !duration || !destination || !origin || !price || !day_plan) {
             return res.status(400).json({ message: 'Invalid payload' });
@@ -127,15 +127,15 @@ export const updatedPackage = async (req, res, next) => {
         }
 
         const { title, package_type, description, duration, destination, origin, price, day_plan, review, meta } = req.body;
-        
+
         // Handle new thumbnail and images
         const newThumbnail = req.files['thumbnail'] ? req.files['thumbnail'][0].path : holidayPackage.image.thumbnail;
         const newImages = req.files['images'] ? req.files['images'].map(file => file.path) : holidayPackage.image.images;
 
         // Remove old thumbnail image if updated
-       
+
         if (newThumbnail && holidayPackage.image.thumbnail) {
-            
+
             const oldImagePath = path.join('uploads/', '..', holidayPackage.image.thumbnail);
             fs.unlink(oldImagePath, (err) => {
                 if (err) {
@@ -153,7 +153,7 @@ export const updatedPackage = async (req, res, next) => {
 
         // Remove old images if updated
         if (newImages.length > 0 && holidayPackage.image.images.length > 0) {
-            
+
             const oldImagePaths = holidayPackage.image.images.map(img => path.join('uploads/', path.basename(img)));
             for (const oldImagePath of oldImagePaths) {
                 try {
@@ -215,3 +215,56 @@ export const deletePackage = async (req, res, next) => {
     }
 }
 
+export const getCount = async (req, res, next) => {
+    try {
+        let packages = await packageModel.find();
+
+        let totalPackageCount = packages.length;
+        let honeymoonPackageCount = 0;
+        let adventurousPackageCount = 0;
+        let religiousPackageCount = 0;
+        let festivePackageCount = 0;
+        let historicalPackageCount = 0;
+        let offsitePackageCount = 0;
+
+
+
+
+        packages.forEach(element => {
+            switch (element.package_type) {
+                case 'honeymoon':
+                    honeymoonPackageCount++;
+                    break;
+                case 'adventurous':
+                    adventurousPackageCount++;
+                    break;
+                case 'religious':
+                    religiousPackageCount++;
+                    break;
+                case 'festive':
+                    festivePackageCount++;
+                    break;
+                case 'historical':
+                    historicalPackageCount++;
+                    break;
+                case 'offsite':
+                    offsitePackageCount++;
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        return res.status(200).json({
+            totalPackageCount,
+            honeymoonPackageCount,
+            adventurousPackageCount,
+            religiousPackageCount,
+            festivePackageCount,
+            historicalPackageCount,
+            offsitePackageCount
+        });
+    } catch (error) {
+        next(error);
+    }
+}

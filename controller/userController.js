@@ -36,16 +36,19 @@ export const createUser = async (req, res, next) => {
 
 
         // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(image);
+        if (image) {
+            const result = await cloudinary.uploader.upload(image);
+            user = await userModel.findByIdAndUpdate(user._id, {image_url:result.secure_url}, {new:true})
+        }
 
-        let updatedUser = await userModel.findByIdAndUpdate(user._id, {image_url:result.secure_url}, {new:true})
-
-        return res.status(201).json({ message: 'user created successfully', user: updatedUser})
+        return res.status(201).json({ message: 'user created successfully', user})
 
     } catch (error) {
         next(error);
     }
 }
+
+
 
 export const getUser = async (req, res, next) => {
     try {
@@ -272,6 +275,18 @@ export const getAllUsers = async (req,res,next) => {
     }
 }
 
+export const getCount = async (req, res, next) => {
+    try {
+        // Count the number of users with the role 'CUSTOMER'
+        let userCount = await userModel.countDocuments({ role: 'CUSTOMER' });
+
+        return res.status(200).json({
+            userCount
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 
 
 

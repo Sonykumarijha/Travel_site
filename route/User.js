@@ -2,7 +2,7 @@ import express from "express";
 //import multer from "multer";
 import fs from 'fs';
 import path from 'path';
-import { createUser, deleteUser, getAllUsers, getUser, login, resetNewPassword, resetPassword, updateUser, verifyOtp } from "../controller/userController.js";
+import { createUser, deleteUser, getAllUsers, getCount, getUser, login, resetNewPassword, resetPassword, updateUser, verifyOtp } from "../controller/userController.js";
 import upload, { uploadSingleImage } from "../helpers/multer.js";
 
 const router = express.Router()
@@ -29,6 +29,8 @@ router.post("/resetpassword",resetPassword)
 router.post("/verifyotp", verifyOtp)
 router.post("/resetnewpassword",resetNewPassword)
 router.get("/allusers",getAllUsers)
+
+router.get("/count",getCount)
 
 
 
