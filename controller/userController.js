@@ -61,43 +61,49 @@ export const getUser = async (req, res, next) => {
 
 }
 
-export const updateUser = async (req, res,next) => {
+export const updateUser = async (req, res, next) => {
     try {
         const userId = req.params.id;
         if (!userId) {
-            return res.status(400).json({ message: "user id is required" });
+            return res.status(400).json({ message: "User ID is required" });
         }
 
         const user = await userModel.findById(userId);
 
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         const { name, phone, password } = req.body;
-        const newImage = req.file ? req.file.path : user.image;
+        let newImage = user.image;  // Default to existing image
+        let imageUrl = user.image_url;  // Default to existing image URL
 
-         // Upload image to Cloudinary
-         const result = await cloudinary.uploader.upload(newImage);
+        // Check if a new image file is provided
+        if (req.file) {
+            newImage = req.file.path;
 
+            // Upload the new image to Cloudinary
+            const result = await cloudinary.uploader.upload(newImage);
+            imageUrl = result.secure_url;
+
+            // Delete the old image file if a new one is provided
+            if (newImage && user.image) {
+                const oldImagePath = path.join('uploads/', '..', user.image);
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) {
+                        console.error('Failed to delete old image:', err);
+                    }
+                });
+            }
+        }
 
         const data = {
-            name: name,
-          //  phone: phone,
-           // password: password,
+            name: name || user.name,
+            phone: phone || user.phone,
+            password: password || user.password,
             image: newImage,
-            image_url:result.secure_url
-        }
-
-        if (newImage && user.image) {
-            const oldImagePath = path.join('uploads/', '..', user.image);
-            fs.unlink(oldImagePath, (err) => {
-                if (err) {
-                    console.error('Failed to delete old image:', err);
-                }
-            });
-        }
-
+            image_url: imageUrl
+        };
 
         const updatedUser = await userModel.findByIdAndUpdate(userId, data, { new: true });
 
@@ -275,13 +281,36 @@ export const getAllUsers = async (req,res,next) => {
     }
 }
 
-export const getCount = async (req, res, next) => {
+export const getAllAgent = async (req,res,next) => {
+    try {
+        let agents = await userModel.find({role:"AGENT"})
+        return res.status(200).json({agents})
+        
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+export const getCustomerCount = async (req, res, next) => {
     try {
         // Count the number of users with the role 'CUSTOMER'
         let userCount = await userModel.countDocuments({ role: 'CUSTOMER' });
 
         return res.status(200).json({
             userCount
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getAgentCount = async (req, res, next) => {
+    try {
+        let agentCount = await userModel.countDocuments({ role: 'AGENT' });
+
+        return res.status(200).json({
+            agentCount
         });
     } catch (error) {
         next(error);
