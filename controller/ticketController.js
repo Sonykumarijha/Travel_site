@@ -204,6 +204,8 @@ export const getAllTicket = async (req, res, next) => {
 };
 
 export const getTicketsByAgentId = async (req, res, next) => {
+    console.log('inside getTicketsByAgentId***********');
+    
     try {
         const agentId = req.params.id;
         const status = req.query.status; // Assuming status is provided as a query parameter
@@ -287,13 +289,19 @@ export const getTicketsByAgentId = async (req, res, next) => {
 
 export const getCount = async (req, res, next) => {
     try {
-        let tickets = await ticketModel.find();
+        const { assignedAgent } = req.query;
+
+        let query = {};
+        if (assignedAgent) {
+            query.assignedAgent = assignedAgent;
+        }
+
+        let tickets = await ticketModel.find(query);
 
         let totalTicketCount = tickets.length;
         let createdTicketCount = 0;
         let assignedTicketCount = 0;
         let inProgressTicketCount = 0;
-
         let resolvedTicketCount = 0;
 
         tickets.forEach(ticket => {
@@ -326,5 +334,50 @@ export const getCount = async (req, res, next) => {
         next(error);
     }
 }
+
+
+
+
+// export const getCount = async (req, res, next) => {
+//     try {
+//         let tickets = await ticketModel.find();
+
+//         let totalTicketCount = tickets.length;
+//         let createdTicketCount = 0;
+//         let assignedTicketCount = 0;
+//         let inProgressTicketCount = 0;
+
+//         let resolvedTicketCount = 0;
+
+//         tickets.forEach(ticket => {
+//             switch (ticket.status) {
+//                 case 'CREATED':
+//                     createdTicketCount++;
+//                     break;
+//                 case 'ASSIGNED':
+//                     assignedTicketCount++;
+//                     break;
+//                 case 'INPROGRESS':
+//                     inProgressTicketCount++;
+//                     break;
+//                 case 'RESOLVED':
+//                     resolvedTicketCount++;
+//                     break;
+//                 default:
+//                     break;
+//             }
+//         });
+
+//         return res.status(200).json({
+//             totalTicketCount,
+//             createdTicketCount,
+//             assignedTicketCount,
+//             inProgressTicketCount,
+//             resolvedTicketCount
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// }
 
 
