@@ -15,14 +15,19 @@ import { getRandomSixDigit } from "../helpers/randomValues.js";
 export const createUser = async (req, res, next) => {
 
     try {
-        const { name, email, phone, password,role } = req.body
+        const { name, email, phone, password,confirmPassword,role } = req.body
         const image = req.file ? req.file.path : null;
+        let user;
 
-        if (!name || !email || !phone || !password) {
+        if (!name || !email || !phone || !password || !confirmPassword) {
             return res.status(400).json({ message: 'invalid payload' })
         }
         if (!/^\S+@\S+\.\S+$/.test(email)) {
             return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        if (password !== confirmPassword) {
+            return res.status(400).json({message: "password and confirm password must be same"})
         }
 
         const existingUser = await userModel.findOne({ email });
@@ -31,8 +36,18 @@ export const createUser = async (req, res, next) => {
         }
 
         let hashedPassword = await bcrypt.hash(password, 10)
+        if (role == "AGENT") {
+            
+                 user = await userModel.create({ name, email, phone, password: hashedPassword, image, role, agent_status: "OFFLINE" })
 
-        let user = await userModel.create({ name, email, phone, password: hashedPassword, image, role })
+        }else{
+            
+               user = await userModel.create({ name, email, phone, password: hashedPassword, image, role })
+
+        }
+        
+
+        // let user = await userModel.create({ name, email, phone, password: hashedPassword, image, role })
 
 
         // Upload image to Cloudinary
@@ -40,6 +55,8 @@ export const createUser = async (req, res, next) => {
             const result = await cloudinary.uploader.upload(image);
             user = await userModel.findByIdAndUpdate(user._id, {image_url:result.secure_url}, {new:true})
         }
+
+     
 
         return res.status(201).json({ message: 'user created successfully', user})
 
@@ -288,6 +305,52 @@ export const getAllAgent = async (req,res,next) => {
         
     } catch (error) {
         next(error)
+    }
+}
+
+export const getAvailableAgents = async (req,res,next) => {
+    try {
+        let agents = await userModel.find({role:"AGENT",agent_status:"AVAILABLE"}).limit(10)
+        return res.status(200).json({agents})
+        
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const updateAgentStatus = async (req,res,next) => {
+    console.log('_______insider updateAgentStatus');
+    
+    try {
+        let agentId = req.params.id
+        console.log(agentId,'_____agentId');
+        
+        let {agent_status} = req.body
+        console.log(agent_status,'___agent_status');
+        
+
+        if (!agentId) {
+            return res.status(400).json({message: "invalid payload"})
+        }
+
+        let agent = await userModel.findById(agentId)
+        
+        if (!agent) {
+            return res.status(400).json({message: "no agent found"})
+
+        }
+
+        await userModel.findByIdAndUpdate(
+            agentId,
+            { agent_status: agent_status },
+            { new: true }
+        );
+        
+
+        return res.status(200).json({message: "updated successfully"})
+    } catch (error) {
+        next(error)
+
     }
 }
 

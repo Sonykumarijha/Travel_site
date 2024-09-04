@@ -185,6 +185,30 @@ export const getPackagesByDestination = async (req, res, next) => {
     }
 }
 
+export const getPackagesByDestinationAndType = async (req, res, next) => {
+    try {
+        const { destination, package_type } = req.query
+        if ( !package_type) {
+            return res.status(400).json({message: "invalid payload"})
+        }
+
+        // Define the query object
+        let query = { package_type: { $regex: `^${package_type}$`, $options: 'i' } };
+       
+        
+        if (destination) {
+            query.destination = { $regex: `^${destination}$`, $options: 'i' };
+        }
+
+        // Fetch activities based on the query
+        const packages = await packageModel.find(query);
+
+        return res.status(200).json({ packages: packages })
+    } catch (error) {
+        next(error);
+    }
+}
+
 
 // export const updatedPackage = async (req, res, next) => {
 

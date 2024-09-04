@@ -34,6 +34,7 @@ const userSchema = new Schema(
             type: String,
             required: true
         },
+       
         image:{
             type: String,
          
@@ -49,7 +50,13 @@ const userSchema = new Schema(
             type: Number,
             required: false
 
-        }
+        },
+        agent_status: {
+            type: String,
+            required: false,
+            enum: ['AVAILABLE', 'BUSY', 'OFFLINE'],
+            //default: 'OFFLINE'
+        },
               
     },
     

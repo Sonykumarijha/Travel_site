@@ -1,5 +1,5 @@
 import express from "express";
-import { createPackage, deletePackage, getAllPackages, getCount, getPackage, getPackagesByDestination, getPackagesByType, updatedPackage } from "../controller/packageController.js";
+import { createPackage, deletePackage, getAllPackages, getCount, getPackage, getPackagesByDestination, getPackagesByDestinationAndType, getPackagesByType, updatedPackage } from "../controller/packageController.js";
 import upload from "../helpers/multer.js";
 
 const router = express.Router()
@@ -34,6 +34,7 @@ router.delete("/:id",deletePackage)
 
 router.get("/packagetype",getPackagesByType)
 router.get("/destination",getPackagesByDestination)
+router.get("/destinationandtype",getPackagesByDestinationAndType)
 
 router.get("/count",getCount)
 
