@@ -29,6 +29,14 @@ const activitySchema = new Schema(
             type: String,
             required: false
         },
+        image: {
+            type: String,
+            required: false
+        },
+        image_url: {
+            type: String,
+            required: false
+        },
         name: {
             type: String,
             required: true
@@ -48,7 +56,8 @@ const activitySchema = new Schema(
         },
         activity_type: {
             type: String,
-            required: true,
+            enum: ['SOLO', 'FRIENDS', 'FAMILY'],
+            default: 'SOLO'
         },
         description: {
             type: String,

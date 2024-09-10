@@ -178,7 +178,9 @@ export const login = async (req, res, next) => {
 
         const updateUser = await userModel.findByIdAndUpdate(user._id, { $set: { access_token: token } }, { new: true })
 
-        return res.status(200).json({ message: "Login Successfully", token: token });
+        return res.status(200).json({ message: "Login Successfully", token: token , name: user.name ,userId:user._id });
+        
+
     } catch (error) {
         next(error);
     }
