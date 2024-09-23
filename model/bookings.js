@@ -14,6 +14,37 @@ const bookingSchema = new Schema(
             ref: 'Package',
             required: true
         },
+        first_name: {
+            type: String,
+            required: true
+        },
+        last_name: {
+            type: String,
+            required: true
+        },
+        phone: {
+            type: Number,
+            required: true,
+           unique: true,
+            validate: {
+                validator: function(value) {
+                    // Example: Validate if the phone number has exactly 10 digits
+                    return /^[0-9]{10}$/.test(value.toString());
+                },
+                message: props => `${props.value} is not a valid phone number!`
+            }
+        },
+        email:{
+            type: String,
+            required: true,
+            unique: true,
+
+        },
+        address:{
+            type: String,
+            required: false
+
+        },
         bookingDate: {
             type: Date,
             default: () => Date.now()
@@ -25,7 +56,7 @@ const bookingSchema = new Schema(
         },
         tripEndDate: {
             type: Date,
-            required: true
+            required: false
         },
         numberOfGuests: {
             type: Number,

@@ -80,6 +80,10 @@ const packageSchema = new Schema(
             type: String,
             require: true
         },
+        no_of_guest: {
+            type: Number,
+            default: 2
+        },
         price: {
             type: Number,
             require: true

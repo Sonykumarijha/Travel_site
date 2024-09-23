@@ -4,24 +4,80 @@ import packageModel from "../model/packages.js"
 
 export const createBooking = async (req, res, next) => {
     try {
-        const { user_id, package_id, tripStartDate, tripEndDate, numberOfGuests, paymentStatus, bookingStatus, meta } = req.body
-        const Package = await packageModel.findById(package_id)
-        const totalPrice = Package.price
+        const { user_id, package_id, first_name, last_name, phone, email, address, tripStartDate, numberOfGuests, paymentStatus, bookingStatus, meta } = req.body;
+        
+        // Find the package by ID
+        const Package = await packageModel.findById(package_id);
+        console.log(Package, '___Package**');
 
-        if (!user_id || !package_id || !tripStartDate || !tripEndDate || !numberOfGuests) {
-            return res.status(400).json({ messagee: "invalid payload" })
+        let packageDuration = Number(Package.duration);
+        console.log(packageDuration, '___packageDuration**');
+        
+        // Convert tripStartDate from string to Date object
+        const tripStartDateObj = new Date(tripStartDate);
+        
+        // Add package duration days to the start date
+        const tripEndDate = new Date(tripStartDateObj.getTime() + packageDuration * 24 * 60 * 60 * 1000);
+        console.log(tripEndDate, '____tripEndDate**');
+        
+        // Check for required fields
+        if (!user_id || !package_id || !first_name || !last_name || !phone || !email || !tripStartDate) {
+            return res.status(400).json({ message: "Invalid payload" });
         }
 
+        // Validate MongoDB Object IDs
         if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(package_id)) {
             return res.status(400).json({ message: 'Invalid user_id or package_id.' });
         }
 
-        const booking = await bookingModel.create({ user_id, package_id, tripStartDate, tripEndDate, numberOfGuests, totalPrice, paymentStatus, bookingStatus, meta })
-        return res.status(200).json({ message: " Booking done", booking })
+        // Calculate total price (you can adjust this logic as needed)
+        const totalPrice = Package.price;
+        
+        // Create the booking
+        const booking = await bookingModel.create({ 
+            user_id, 
+            package_id, 
+            first_name, 
+            last_name, 
+            phone, 
+            email, 
+            address, 
+            tripStartDate: tripStartDateObj, 
+            tripEndDate,  // Add tripEndDate to the booking 
+            numberOfGuests, 
+            totalPrice, 
+            paymentStatus, 
+            bookingStatus, 
+            meta 
+        });
+
+        return res.status(200).json({ message: "Booking done", booking });
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};
+
+
+// export const createBooking = async (req, res, next) => {
+//     try {
+//         const { user_id, package_id, tripStartDate, tripEndDate, numberOfGuests, paymentStatus, bookingStatus, meta } = req.body
+//         const Package = await packageModel.findById(package_id)
+//         const totalPrice = Package.price
+
+//         if (!user_id || !package_id || !tripStartDate || !tripEndDate || !numberOfGuests) {
+//             return res.status(400).json({ messagee: "invalid payload" })
+//         }
+
+//         if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(package_id)) {
+//             return res.status(400).json({ message: 'Invalid user_id or package_id.' });
+//         }
+
+//         const booking = await bookingModel.create({ user_id, package_id, tripStartDate, tripEndDate, numberOfGuests, totalPrice, paymentStatus, bookingStatus, meta })
+//         return res.status(200).json({ message: " Booking done", booking })
+//     } catch (error) {
+//         next(error)
+//     }
+// }
 
 export const getBooking = async (req, res, next) => {
     try {
